@@ -9,8 +9,12 @@ private:
     struct Node {
         T data;
         Node* next;
+        
         Node(T newData) {
             this->data = newData;
+            next = nullptr;
+        }
+        ~Node() {
             next = nullptr;
         }
     };
@@ -46,6 +50,7 @@ public:
             }
             currentNode = currentNode->next;
         }
+        
         return nullptr;
     }
     
@@ -58,15 +63,19 @@ public:
     Node* nodePrior(T value) {
         Node* currentNode = headNode;
         
+        // If we're empty, return null.
         if (currentNode == nullptr) { return nullptr; }
         
+        // Traverse until the end, or we find the next whose value is `value`
         while (currentNode->next != nullptr && currentNode->next->data != value) {
             currentNode = currentNode->next;
         }
         
+        // If we're not at the end, and the next node's data *does* match, return the node.
         if (currentNode->next != nullptr && currentNode->next->data == value) {
             return currentNode;
         }
+        
         return nullptr;
     }
     
@@ -118,11 +127,13 @@ public:
         Node* currentNode = headNode;
         
         if (currentNode == nullptr) {
+            // If we're empty, this is the head.
             return insertHead(value);
         }
         
         Node* newNode = new Node(value);
         
+        // Traverse to end
         while (currentNode->next != nullptr) {
             currentNode = currentNode->next;
         }
@@ -168,6 +179,7 @@ public:
      */
     virtual void remove(T value) {
         
+        // If this is the head, delete the head.
         if (headNode != nullptr && headNode->data == value) {
             Node* nextNode = headNode->next;
             delete headNode;
@@ -199,10 +211,10 @@ public:
             Node* nextNode = currentNode->next;
             delete currentNode;
             currentNode = nextNode;
+            count -= 1;
         }
         
         headNode = nullptr;
-        count = 0;
     }
     
     /**
