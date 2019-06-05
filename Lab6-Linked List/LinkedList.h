@@ -1,27 +1,86 @@
 #include <iostream>
+#include <sstream>
 #include "LinkedListInterface.h"
 
 template <typename T>
 class LinkedList: public LinkedListInterface<T> {
 private:
+    /// A wrapper around list data.
     struct Node {
         T data;
         Node* next;
+        Node(T newData) {
+            this->data = newData;
+            next = nullptr;
+        }
     };
-    Node* head;
+    
+    /// The first node in the list.
+    Node* headNode;
+    int count;
     
 public:
+    // Constructor
     LinkedList(void) {
-        head = nullptr;
+        headNode = nullptr;
+        count = 0;
     }
     
+    // Destructor
     virtual ~LinkedList(void) {
-        Node* currentNode = head;
+        clear();
+    }
+    
+    /**
+     member
+     
+     Returns a node containing the given value if it exists in the list. Returns `nullptr` otherwise.
+     
+     */
+    Node* member(T value) {
+        Node* currentNode = headNode;
+        
         while (currentNode != nullptr) {
-            Node* nextNode = currentNode->next;
-            delete currentNode;
-            currentNode = nextNode;
+            if (currentNode->data == value) {
+                return currentNode;
+            }
+            currentNode = currentNode->next;
         }
+        return nullptr;
+    }
+    
+    /**
+     nodePrior
+     
+     Returns the node just prior to the target node, if it exists in the list.
+     
+     */
+    Node* nodePrior(T value) {
+        Node* currentNode = headNode;
+        
+        if (currentNode == nullptr) { return nullptr; }
+        
+        while (currentNode->next != nullptr && currentNode->next->data != value) {
+            currentNode = currentNode->next;
+        }
+        
+        if (currentNode->next != nullptr && currentNode->next->data == value) {
+            return currentNode;
+        }
+        return nullptr;
+    }
+    
+    /**
+     contains
+     
+     Returns `true` if the list contains the given value.
+     
+     */
+    bool contains(T value) {
+        if (member(value) == nullptr) {
+            return false;
+        }
+        return true;
     }
     
     /**
@@ -32,7 +91,17 @@ public:
      Do not allow duplicate values in the list.
      */
     virtual void insertHead(T value) {
+        // No duplicates!
+        if (this->contains(value)) { return; }
         
+        Node* newNode = new Node(value);
+        
+        if (headNode != nullptr) {
+            newNode->next = headNode;
+        }
+        
+        headNode = newNode;
+        count += 1;
     }
     
     /**
@@ -43,7 +112,23 @@ public:
      Do not allow duplicate values in the list.
      */
     virtual void insertTail(T value) {
+        // No duplicates!
+        if (this->contains(value)) { return; }
         
+        Node* currentNode = headNode;
+        
+        if (currentNode == nullptr) {
+            return insertHead(value);
+        }
+        
+        Node* newNode = new Node(value);
+        
+        while (currentNode->next != nullptr) {
+            currentNode = currentNode->next;
+        }
+        
+        currentNode->next = newNode;
+        count += 1;
     }
     
     /**
@@ -56,7 +141,22 @@ public:
      insertionNode is in the list. Do not allow duplicate values in the list.
      */
     virtual void insertAfter(T value, T insertionNode) {
+        Node* insertion = member(insertionNode);
+        if (insertion == nullptr) { return; }
+        if (member(value) != nullptr) { return; }
         
+        Node* newNode = new Node(value);
+        
+        if (insertion->next != nullptr) {
+            Node* nextNode = insertion->next;
+            insertion->next = newNode;
+            newNode->next = nextNode;
+            
+        } else {
+            insertion->next = newNode;
+        }
+        
+        count += 1;
     }
     
     /**
@@ -68,6 +168,23 @@ public:
      */
     virtual void remove(T value) {
         
+        if (headNode != nullptr && headNode->data == value) {
+            Node* nextNode = headNode->next;
+            delete headNode;
+            headNode = nextNode;
+            count -= 1;
+            return;
+        }
+        
+        Node* priorNode = nodePrior(value);
+        if (priorNode == nullptr) { return; }
+        if (priorNode->next == nullptr || priorNode->next->data != value) { return; }
+        
+        Node* nextNode = priorNode->next->next;
+        delete priorNode->next;
+        priorNode->next = nextNode;
+        
+        count -= 1;
     }
     
     /**
@@ -76,7 +193,16 @@ public:
      Remove all nodes from the list.
      */
     virtual void clear() {
+        Node* currentNode = headNode;
         
+        while (currentNode != nullptr) {
+            Node* nextNode = currentNode->next;
+            delete currentNode;
+            currentNode = nextNode;
+        }
+        
+        headNode = nullptr;
+        count = 0;
     }
     
     /**
@@ -88,7 +214,20 @@ public:
      If the given index is out of range of the list, throw an out of range exception.
      */
     virtual T at(int index) {
-        return head->data;
+        int currentIndex = 0;
+        Node* currentNode = headNode;
+        
+        while (currentNode != nullptr && currentIndex < index) {
+            currentNode = currentNode->next;
+            currentIndex += 1;
+        }
+        
+        if (currentNode != nullptr && currentIndex == index) {
+            return currentNode->data;
+        }
+        
+        // Throw exception
+        throw std::out_of_range("Index " + to_string(index) + " is out of range ending before " + to_string(size()));
     }
     
     /**
@@ -97,7 +236,7 @@ public:
      Returns the number of nodes in the list.
      */
     virtual int size() {
-        return 1;
+        return this->count;
     }
     
     /**
@@ -110,6 +249,17 @@ public:
      "1 2 3 4 5"
      */
     virtual string toString() {
-        return "";
+        Node* currentNode = headNode;
+        stringstream result;
+        
+        while (currentNode != nullptr) {
+            result << currentNode->data;
+            if (currentNode->next != nullptr) {
+                result << " ";
+            }
+            currentNode = currentNode->next;
+        }
+        
+        return result.str();
     }
 };
