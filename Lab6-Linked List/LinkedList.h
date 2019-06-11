@@ -14,6 +14,7 @@ private:
             this->data = newData;
             next = nullptr;
         }
+        
         ~Node() {
             next = nullptr;
         }
@@ -86,10 +87,7 @@ public:
      
      */
     bool contains(T value) {
-        if (member(value) == nullptr) {
-            return false;
-        }
-        return true;
+        return member(value) != nullptr;
     }
     
     /**
